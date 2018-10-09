@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 # -----------
 # Cheat sheet
 # -----------
@@ -60,6 +60,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('variable', type=str, help='RACMO variable desired',
                choices=['snowfall_daily', 'runoff_daily', 'runoff_downscaled', 'smb_daily', 'smb_monthly', 'smb_downscaled'])
 parser.add_argument('--RACMOnetCDFdirectory', type=str, help='RACMO directory', default=None)
+#parser.add_argument('--inputTemporalResolution', type=str, help='temporal resolution of input file', default='weekly',
+#                     choices=['daily', 'weekly', 'monthly', 'yearly'])
 
 # Coordinates to project onto
 parser.add_argument('--nointerpolate', action='store_true', help='do not interpolate; use "x" and "y" variables in ncfile as coordinates')
@@ -138,7 +140,7 @@ if args.matfile:
       os.remove(filename)
    
 # Read RACMO netCDF file(s)
-print "reading RACMO netCDF file(s)"
+print("reading RACMO netCDF file(s)")
 if args.variable == 'snowfall_daily':
    ncfile = Dataset(RACMOnetCDFdirectory + '/ZGRN11_snowfall_daily_1991-2000.nc','r')
    variable = ncfile.variables['snowfall'][:,0,:,:]
@@ -194,8 +196,8 @@ elif args.variable == 'runoff_downscaled':
       variable = np.vstack((variable, ncfile.variables['runoffcorr'][:,:,:]))
 
    year0 = int(startyear)
-   month0 = int(01)
-   day0 = int(01)
+   month0 = int(1)
+   day0 = int(1)
    epochdt = datetime.datetime(year0,month0,day0,0,0,0)
 
    # TBD: I don't understand what the following variables actually represent. Mins/maxes don't
@@ -211,6 +213,7 @@ elif args.variable == 'runoff_downscaled':
    variableShort = 'runoff'
 
    units = 'kg day^-1 m^-2'
+   import pdb; pdb.set_trace()
    
 elif args.variable == 'smb_daily':
    ncfile = Dataset(RACMOnetCDFdirectory + '/ZGRN11_smb_daily_1991-2000.nc','r')
@@ -275,7 +278,7 @@ elif args.variable == 'smb_downscaled':
 
    variable = np.empty([(readendyear-readstartyear+1)*12, y.shape[0], x.shape[0]])
    for year in range(readstartyear,readendyear+1):
-      print "reading year " + str(year)
+      print("reading year " + str(year))
       ncfilename = RACMOnetCDFdirectory + '/SMB_rec_WJB_int.' + str(year) + '.BN_1958_2013_1km.DD.nc'
       ncfile = Dataset(ncfilename, 'r')
       variableyear = ncfile.variables['SMB_rec'][:,:,:]
@@ -290,8 +293,8 @@ elif args.variable == 'smb_downscaled':
          variable[startIdx+month-1,:,:] = variablemonthsum
 
    year0 = int(readstartyear)
-   month0 = int(01)
-   day0 = int(01)
+   month0 = int(1)
+   day0 = int(1)
    epochdt = datetime.datetime(year0,month0,day0,0,0,0)
 
    #inputTemporalResolution = 'daily'
@@ -364,7 +367,7 @@ else:
    ymax = np.max(y)
 
 # Setup regular grid
-print "setting up grid"
+print("setting up grid")
 nx = (xmax - xmin) / iStep
 ny = (ymax - ymin) / iStep
 
@@ -425,9 +428,9 @@ elif inputTemporalResolution == 'monthly':
    startIdx = monthdelta(epochdt, startdt)
    endIdx = monthdelta(epochdt, enddt) + 1
    
-if debug: print 'startdate  = ' + str(args.startdate)
-if debug: print 'startIdx = ' + str(startIdx)
-if debug: print 'endIdx   = ' + str(endIdx)
+if debug: print('startdate  = ' + str(args.startdate))
+if debug: print('startIdx = ' + str(startIdx))
+if debug: print('endIdx   = ' + str(endIdx))
 
 # Anomaly
 if args.anomaly:   
@@ -461,8 +464,8 @@ variableSum = np.zeros(variable[1].shape)
 if args.clipfile or args.mask:
    variableSum = np.where(maskArrayi > 0.5, np.zeros(maskArrayi.shape), np.nan)
 
-print "summing " + args.variable + " at " + args.temporalresolution + " intervals"
-print " from " + str(startIdx) + " to " + str(endIdx)
+print("summing " + args.variable + " at " + args.temporalresolution + " intervals")
+print(" from " + str(startIdx) + " to " + str(endIdx))
 
 # if inputTemporalResolution == 'daily' and args.temporalresolution == 'daily':
 #    resetEvery = 1  
@@ -474,7 +477,7 @@ print " from " + str(startIdx) + " to " + str(endIdx)
 # elif inputTemporalResolution == 'monthly' and args.temporalresolution == 'monthly':
 #    resetEvery = 1
 # else:
-#    print "invalid temporal resolution specified: " + args.temporalresolution
+#    print("invalid temporal resolution specified: " + args.temporalresolution)
 #    sys.exit()
 
 # Loop
@@ -494,7 +497,7 @@ if args.pngs or args.tiffs or args.stats or args.matfile or debug:
        dayOfYear = dateCounter.timetuple().tm_yday  
        
        # Sum the variable
-       if debug: print 'summing idx: ' + str(iIdx) + ', year: ' + str(year) + ', month: ' + str(month) + ', day: ' + str(day)
+       if debug: print('summing idx: ' + str(iIdx) + ', year: ' + str(year) + ', month: ' + str(month) + ', day: ' + str(day))
        variableSum = variableSum + variable[iIdx][:][:]
        
        # Check for reset
@@ -508,8 +511,8 @@ if args.pngs or args.tiffs or args.stats or args.matfile or debug:
        #   if (monday2 - monday1) % 7 == 0: resetFlag = True
        # if args.temporalresolution == 'monthly':
        #    if (dateCounter.year - datePrevious.year) * 12 + dateCounter.month - datePrevious.month % 1 == 0: resetFlag = True
-       if args.temporalresolution == 'yearly':
-          if relativedelta(end_date, start_date).years
+       #if args.temporalresolution == 'yearly':
+          #if relativedelta(end_date, start_date).years
 
        if resetCounter == resetEvery or (args.outputlast and iIdx == endIdx):    
            # Anomaly

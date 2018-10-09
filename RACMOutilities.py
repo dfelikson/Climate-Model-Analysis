@@ -26,7 +26,7 @@ def datetime2matlabdn(dt):
    return mdn.toordinal() + frac
 
 def outputPNG(args, year, dayOfYear, variableSumi, geoTransform):
-   print 'writing PNG for year ' + str(year) + ', DOY ' + str(dayOfYear)
+   print('writing PNG for year ' + str(year) + ', DOY ' + str(dayOfYear))
    filename = args.outputdir + '/' + args.regionname + '_' + args.variable + '_sum_year%4d_doy%03d.png' % (year, dayOfYear)
    plt.imshow(np.flipud(variableSumi), vmin=0, vmax=10, cmap='Reds')
    plt.colorbar()
@@ -35,7 +35,7 @@ def outputPNG(args, year, dayOfYear, variableSumi, geoTransform):
    plt.close()
       
 def outputGeoTIFF(args, year, dayOfYear, variableSumi, geoTransform):
-   print 'writing GTiff for year ' + str(year) + ', DOY ' + str(dayOfYear)
+   print('writing GTiff for year ' + str(year) + ', DOY ' + str(dayOfYear))
    filename = args.outputdir + '/' + args.regionname + '_' + args.variable + '_sum_year%4d_doy%03d.tif' % (year, dayOfYear)
    
    cols = variableSumi.shape[1]
@@ -76,7 +76,7 @@ def outputGeoTIFF2(args, label, variableSumi, geoTransform):
    outBand.FlushCache()
    
 def outputStats(args, year, dayOfYear, variableSumiIntegrated):
-   print 'writing stats for year ' + str(year) + ', DOY ' + str(dayOfYear)
+   print('writing stats for year ' + str(year) + ', DOY ' + str(dayOfYear))
    filename = args.outputdir + '/' + args.regionname + '_' + args.variable + '_sum_' + args.temporalresolution + '.txt'
    f = open(filename, 'a')
    printString = '%4d, %03d, %12.3f\n' % (year, dayOfYear, variableSumiIntegrated)
@@ -84,7 +84,7 @@ def outputStats(args, year, dayOfYear, variableSumiIntegrated):
    f.close()
    
 def outputMAT(args, year, dayOfYear, variableSumi, geoTransform):
-   print "writing MAT file"
+   print("writing MAT file")
    filename = args.outputdir + '/' + args.regionname + '_racmo' + '.mat'
    
    # Load mat file
@@ -114,7 +114,7 @@ def outputMAT(args, year, dayOfYear, variableSumi, geoTransform):
    sio.savemat(filename, {'racmo': racmo})
 
 def outputCSV(args, year, dayOfYear, x, y, variableSum):
-   print "writing CSV file"
+   print("writing CSV file")
    filename = args.outputdir + '/' + args.regionname + '_' + args.variable + '_' + str(year) + '_' + str(dayOfYear) + '.csv'
    f = open(filename, 'w')
    np.savetxt(f, np.c_[x, y, variableSum], delimiter=',', fmt='%16.5f %16.5f %16.5f')
