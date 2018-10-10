@@ -26,14 +26,27 @@ import pickle
 
 #from uncertainties import unumpy as unp
 
-ncfilename = '/Users/dfelikso/Research/Data/RACMO/RACMO2.3/originalData/runoff_WJB_int.2015.BN_1958_2013_1km.DD.nc'
-clipfile = '/Users/dfelikso/Research/Projects/ISMIP6/GrIS_Tidewater_Basins/GrIS_Tidewater_basins.mat.shp'
+# --- Setup ---
+# Setup: RACMO
+ncfilename = '/disk/staff/gcatania/polar/Arctic/data/RACMO/RACMO2.3/originalData/downscaled/runoff.1958-2017.BN_RACMO2.3p2_FGRN055_GrIS.MM.nc'
+clipfile = '/home/student/denis/ISMIP6/GrIS_Tidewater_Basins/GrIS_Tidewater_basins.mat.shp'
 attributefilter = 'basin=*'
 attributefilter = 'basin=527'
 
+time_var = 'time';
+x_var = 'lon';
+y_var = 'lat';
+runoff_var = 'runoffcorr'
+
+# Setup: MAR
+
+# Setup: general
 oversampleGrid = False
 oversampleZoom = 2.
 
+
+# --- Processing ---
+# A warning about how this script works
 print(" ")
 print("\033[93mWARNING! This script uses the exterior of each polygon! \033[0m") 
 print(" ")
@@ -42,8 +55,8 @@ print(" ")
 print("reading netcdf file: " + ncfilename)
 ncfile = Dataset(ncfilename, 'r')
 t = ncfile.variables['time']
-x = ncfile.variables['x'][:]
-y = ncfile.variables['y'][:]
+x = ncfile.variables[x_var][:]
+y = ncfile.variables[y_var][:]
 runoff = ncfile.variables['runoffcorr']
 
 geoTransform = [x[0], x[1]-x[0], 0., y[-1], 0., y[0]-y[1]]
@@ -95,9 +108,12 @@ for iValue, attributeValue in enumerate(attributeValues):
 
 # Initialize output dict
 runoffDict = dict()
-runoffDict['time'] = t[:].data
+runoffDict['time'] = t[:]
 for attributeValue in attributeValues:
    runoffDict[attributeValue] = np.empty( len(t) )
+
+# Pass units through
+runoffDict['units'] = runoff.units
 
 # Mask at each timestep for all basins {{{
 print("masking at each timestep for each basin")
