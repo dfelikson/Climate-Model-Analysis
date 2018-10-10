@@ -120,7 +120,7 @@ runoffDict['runoff'] = {'units': runoff.units}
 print("masking at each timestep for each basin")
 tStart = time.time()
 for iValue, basinValue in enumerate(basinValues):
-   runoffDict['runoff'][basinValue] = np.empty( len(t) )
+   runoffDict['runoff']['basin'+basinValue] = np.empty( len(t) )
    #for itime in progressbar.progressbar( range(0, runoff.shape[0]) ):
    for itime in range(0, runoff.shape[0]):
       if oversampleGrid:
@@ -130,13 +130,13 @@ for iValue, basinValue in enumerate(basinValues):
       
       runoffSum = 0.
       runoffSum = np.sum( maskArray[iValue,:,:] * runoff_timeSlice)
-      runoffDict['runoff'][basinValue][itime] = runoffSum
+      runoffDict['runoff']['basin'+basinValue][itime] = runoffSum
 
 elapsed = time.time() - tStart
 print('Elapsed: {:5.2f} sec'.format(elapsed))
 #}}}
 
 print("Saving to pickle and matfile")
-pickle.dump(runoffDict, open('runoffDict.p', 'wb'))
-savemat('runoffDict.mat', runoffDict)
+pickle.dump(runoffDict, open('runoff_timeseries_by_basin.p', 'wb'))
+savemat('runoff_timeseries_by_basin.mat', runoffDict)
 
