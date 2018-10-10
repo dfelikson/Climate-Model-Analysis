@@ -9,6 +9,7 @@ from netCDF4 import Dataset
 
 #from scipy.interpolate import interp2d
 from scipy import ndimage
+from scipy.io import savemat
 
 #import string
 
@@ -17,7 +18,7 @@ from RasterClipperFunctions import *
 from RACMOutilities import *
 
 import time
-import progressbar
+#import progressbar
 
 import pickle
 
@@ -30,8 +31,8 @@ import pickle
 # Setup: RACMO
 ncfilename = '/disk/staff/gcatania/polar/Arctic/data/RACMO/RACMO2.3/originalData/downscaled/runoff.1958-2017.BN_RACMO2.3p2_FGRN055_GrIS.MM.nc'
 clipfile = '/home/student/denis/ISMIP6/GrIS_Tidewater_Basins/GrIS_Tidewater_basins.mat.shp'
-attributefilter = 'basin=*'
-attributefilter = 'basin=527'
+basinfilter = 'basin=*'
+basinfilter = 'basin=527'
 
 time_var = 'time';
 x_var = 'lon';
@@ -66,8 +67,8 @@ if oversampleGrid:
 #}}}
 
 # Create basin mask {{{
-if not checkForField(clipfile, attributefilter.split('=')[0]):
-   print('ERROR in ' + __file__ + ': Attribute "' + attributefilter.split('=')[0] + '" not found in ' + clipfile)
+if not checkForField(clipfile, basinfilter.split('=')[0]):
+   print('ERROR in ' + __file__ + ': Attribute "' + basinfilter.split('=')[0] + '" not found in ' + clipfile)
    sys.exit()
 
 print("creating basin masks")
@@ -75,10 +76,10 @@ driver = ogr.GetDriverByName("ESRI Shapefile")
 dataSource = driver.Open(clipfile, 0)
 layer = dataSource.GetLayer()
 
-if '*' in attributefilter:
-   attributeValues = getUniqueFieldValues(clipfile, attributefilter.split('=')[0])
+if '*' in basinfilter:
+   basinValues = getUniqueFieldValues(clipfile, basinfilter.split('=')[0])
 else:
-   attributeValues = [attributefilter.split('=')[1]]
+   basinValues = [basinfilter.split('=')[1]]
 
 if oversampleGrid:
    runoff_nrows = int(runoff.shape[1]*oversampleZoom)
@@ -87,10 +88,10 @@ else:
    runoff_nrows = int(runoff.shape[1])
    runoff_ncols = int(runoff.shape[2])
 
-maskArray = np.zeros( (len(attributeValues), runoff_nrows, runoff_ncols) )
+maskArray = np.zeros( (len(basinValues), runoff_nrows, runoff_ncols) )
 
-for iValue, attributeValue in enumerate(attributeValues):
-   AF = attributefilter.split('=')[0] + '=' + str(attributeValue)
+for iValue, basinValue in enumerate(basinValues):
+   AF = basinfilter.split('=')[0] + '=' + str(basinValue)
    layer.SetAttributeFilter(AF)
    for feature in layer:
       geometry = feature.GetGeometryRef()
@@ -107,37 +108,35 @@ for iValue, attributeValue in enumerate(attributeValues):
 #}}}
 
 # Initialize output dict
+#class runoffClass:
+#   time = dict()
+#   runoff = dict()
+#rC = runoffClass()
 runoffDict = dict()
-runoffDict['time'] = t[:]
-for attributeValue in attributeValues:
-   runoffDict[attributeValue] = np.empty( len(t) )
-
-# Pass units through
-runoffDict['units'] = runoff.units
+runoffDict['time']   = {'time': t[:], 'units': t.units}
+runoffDict['runoff'] = {'units': runoff.units}
 
 # Mask at each timestep for all basins {{{
 print("masking at each timestep for each basin")
-#for itime in progressbar.progressbar( range(0, runoff.shape[0]) ):
-for itime in range(0, runoff.shape[0]):
-   #sys.stdout.write('{:03.0f} '.format(t[itime]))
-   #sys.stdout.flush()
-
-   if oversampleGrid:
-      runoff_timeSlice = ndimage.zoom(runoff[itime,:,:], oversampleZoom)
-   else:
-      runoff_timeSlice = runoff[itime,:,:]
-   
-   runoffSum = 0.
-   for iValue, attributeValue in enumerate(attributeValues):
+tStart = time.time()
+for iValue, basinValue in enumerate(basinValues):
+   runoffDict['runoff'][basinValue] = np.empty( len(t) )
+   #for itime in progressbar.progressbar( range(0, runoff.shape[0]) ):
+   for itime in range(0, runoff.shape[0]):
+      if oversampleGrid:
+         runoff_timeSlice = ndimage.zoom(runoff[itime,:,:], oversampleZoom)
+      else:
+         runoff_timeSlice = runoff[itime,:,:]
+      
+      runoffSum = 0.
       runoffSum = np.sum( maskArray[iValue,:,:] * runoff_timeSlice)
-      runoffDict[attributeValue][itime] = runoffSum
-      #sys.stdout.write('{:16.3f} '.format(runoffSum))
-      #sys.stdout.flush()
+      runoffDict['runoff'][basinValue][itime] = runoffSum
 
-   #sys.stdout.write('\n')
-   #sys.stdout.flush()
+elapsed = time.time() - tStart
+print('Elapsed: {:5.2f} sec'.format(elapsed))
 #}}}
 
-import pdb; pdb.set_trace()
-pickle.dump(runoffDict, open('runoffDict', 'wb'))
+print("Saving to pickle and matfile")
+pickle.dump(runoffDict, open('runoffDict.p', 'wb'))
+savemat('runoffDict.mat', runoffDict)
 
