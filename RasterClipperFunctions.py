@@ -14,6 +14,30 @@ import sys
 import matplotlib.pyplot as plt
 
 
+
+def getUniqueFieldValues(shapefile, fieldName): #{{{
+   driver = ogr.GetDriverByName("ESRI Shapefile")
+   dataSource = driver.Open(shapefile, 0)
+   layer = dataSource.GetLayer()
+   
+   values_list = list()
+   for feature in layer:
+      values_list.append(feature.GetField(fieldName))
+
+   return sorted(set(values_list))
+   #}}}
+
+def checkForField(shapefile, fieldName): #{{{
+   driver = ogr.GetDriverByName("ESRI Shapefile")
+   dataSource = driver.Open(shapefile, 0)
+   layer = dataSource.GetLayer()
+   fieldNames = [field.name for field in layer.schema]
+   if fieldName in fieldNames:
+       return True
+   else:
+       return False
+   #}}}
+
 # This function creates a shapely polygon which is the union
 # of several polygons within the given shapefile filtered
 # based on attributeFilter.
