@@ -3,7 +3,7 @@
 import os, sys, argparse, datetime
 from subprocess import call
 import numpy as np
-np.seterr(invalid='ignore') # ignore invalid value warnings
+#np.seterr(invalid='ignore') # ignore invalid value warnings
 from netCDF4 import Dataset
 from pyproj import Proj
 
@@ -27,15 +27,19 @@ smb_netcdf    = RACMO_directory + '/smb_rec.1958-2017.BN_RACMO2.3p2_FGRN055_GrIS
 
 output_directory = '/disk/staff/gcatania/polar/Arctic/data/RACMO/RACMO2.3/RACMO2.3p2anomaly'
 
-startdate_string = '1985Sep01'
 startyear = 1985; startmonth = 9; startday =  1;
-enddate_string   = '2014Aug31'
+#startyear = 2000; startmonth = 9; startday =  1;
+startdate_string = datetime.date(startyear, startmonth, startday).strftime('%Y%b%d')
 endyear   = 2014; endmonth   = 8; endday   = 31;
+#endyear   = 2015; endmonth   = 8; endday   = 31;
+enddate_string = datetime.date(endyear, endmonth, endday).strftime('%Y%b%d')
 
-meanstartdate_string = '1971Sep01'
 meanstartyear = 1971; meanstartmonth = 9; meanstartday =  1;
-meanenddate_string   = '1988Aug31'
+#meanstartyear = 2000; meanstartmonth = 9; meanstartday =  1;
+meanstartdate_string = datetime.date(meanstartyear, meanstartmonth, meanstartday).strftime('%Y%b%d')
 meanendyear   = 1988; meanendmonth   = 8; meanendday   = 31;
+#meanendyear   = 2015; meanendmonth   = 8; meanendday   = 31;
+meanenddate_string = datetime.date(meanendyear, meanendmonth, meanendday).strftime('%Y%b%d')
 
 precip_error = 0.1
 runoff_error = 0.2
@@ -143,7 +147,7 @@ for year in np.arange(startyear,endyear):
 
 smbCumulativeError = np.sqrt(smbCumulativeError)
 
-smbAnomalySumError = np.sqrt(smbCumulativeError**2 + smbMeanError**2)
+smbAnomalySumError = np.sqrt(smbCumulativeError**2 + (endyear-startyear+1)**2 * smbMeanError**2)
 smbAnomalySumError = np.flipud(smbAnomalySumError)
 
 # write tifs
@@ -151,3 +155,8 @@ output_filename = output_directory + '/GrIS_smb_downscaled_anomalySumError_' + s
 print('writing: ' + output_filename)
 raster.writeArrayAsRasterBand(output_filename, geoTransform, smbAnomalySumError / 917., -9999.)
 
+# # account for range in density (750 +/- 150)
+# output_filename = output_directory + '/GrIS_smb_downscaled_anomalySumError_' + startdate_string + '-' + enddate_string + '_fromMean_' + meanstartdate_string + '-' + meanenddate_string + '_densityError_dh.tif'
+# print('writing: ' + output_filename)
+# raster.writeArrayAsRasterBand(output_filename, geoTransform, smbAnomalySumError / 917 + smbAnomaly / 4500., -9999.)
+# 
