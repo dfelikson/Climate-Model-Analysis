@@ -11,6 +11,8 @@ from scipy.interpolate import interp2d
 
 import string
 
+import copy
+
 from RACMOgridAndStatsGlobals import *
 from RasterClipperFunctions import *
 from RACMOutilities import *
@@ -27,18 +29,27 @@ smb_netcdf    = RACMO_directory + '/smb_rec.1958-2017.BN_RACMO2.3p2_FGRN055_GrIS
 
 output_directory = '/disk/staff/gcatania/polar/Arctic/data/RACMO/RACMO2.3/RACMO2.3p2anomaly'
 
-startyear = 1985; startmonth = 9; startday =  1;
-#startyear = 2000; startmonth = 9; startday =  1;
-startdate_string = datetime.date(startyear, startmonth, startday).strftime('%Y%b%d')
-endyear   = 2014; endmonth   = 8; endday   = 31;
-#endyear   = 2015; endmonth   = 8; endday   = 31;
-enddate_string = datetime.date(endyear, endmonth, endday).strftime('%Y%b%d')
+# For present-day climate ... use the mean tiff:
+meanstartyear = 2000; meanstartmonth = 9; meanstartday =  1;
+meanendyear   = 2015; meanendmonth   = 8; meanendday   = 31;
+startyear = 2000; startmonth = 9; startday =  1;
+endyear   = 2015; endmonth   = 8; endday   = 31;
 
-meanstartyear = 1971; meanstartmonth = 9; meanstartday =  1;
-#meanstartyear = 2000; meanstartmonth = 9; meanstartday =  1;
+# For present-day climate anomaly from mean 1971-1988:
+#meanstartyear = 1971; meanstartmonth = 9; meanstartday =  1;
+#meanendyear   = 1988; meanendmonth   = 8; meanendday   = 31;
+#startyear = 2000; startmonth = 9; startday =  1;
+#endyear   = 2015; endmonth   = 8; endday   = 31;
+
+# For stable climate anomaly from mean 1971-1988:
+#meanstartyear = 1971; meanstartmonth = 9; meanstartday =  1;
+#meanendyear   = 1988; meanendmonth   = 8; meanendday   = 31;
+#startyear = 1971; startmonth = 9; startday =  1;
+#endyear   = 1988; endmonth   = 8; endday   = 31;
+
+startdate_string = datetime.date(startyear, startmonth, startday).strftime('%Y%b%d')
+enddate_string = datetime.date(endyear, endmonth, endday).strftime('%Y%b%d')
 meanstartdate_string = datetime.date(meanstartyear, meanstartmonth, meanstartday).strftime('%Y%b%d')
-meanendyear   = 1988; meanendmonth   = 8; meanendday   = 31;
-#meanendyear   = 2015; meanendmonth   = 8; meanendday   = 31;
 meanenddate_string = datetime.date(meanendyear, meanendmonth, meanendday).strftime('%Y%b%d')
 
 precip_error = 0.1
@@ -78,8 +89,8 @@ print('calculating smb anomaly')
 meanstartdt = datetime.datetime(meanstartyear,meanstartmonth,meanstartday,0,0,0)
 meanenddt   = datetime.datetime(meanendyear,meanendmonth,meanendday,0,0,0)
 meanstartIdx = monthdelta(epochdt, meanstartdt); meanendIdx = monthdelta(epochdt, meanenddt)
-smbMean = np.mean(smb[meanstartIdx:meanendIdx,:,:],axis=0) # [mm W.E. / month]
-precipMean = np.mean(precip[meanstartIdx:meanendIdx,:,:],axis=0)
+smbMean    = copy.deepcopy(np.mean(smb[meanstartIdx:meanendIdx,:,:],axis=0)) # [mm W.E. / month]
+precipMean = copy.deepcopy(np.mean(precip[meanstartIdx:meanendIdx,:,:],axis=0))
 
 # # DEBUG: mean of annual means is no different than mean over all months
 # years = np.arange(meanstartyear,meanendyear+1)
@@ -93,14 +104,14 @@ precipMean = np.mean(precip[meanstartIdx:meanendIdx,:,:],axis=0)
 
 # sum
 startIdx = monthdelta(epochdt, startdt); endIdx   = monthdelta(epochdt, enddt) + 1;
-smbSum = np.sum(smb[startIdx:endIdx,:,:],axis=0)  # [mm W.E.]
+smbSum = copy.deepcopy(np.sum(smb[startIdx:endIdx,:,:],axis=0))  # [mm W.E.]
 
 # anomaly
-smbAnomaly = smbSum - smbMean * (endIdx-startIdx) # [mm W.E.]
+smbAnomaly = copy.deepcopy(smbSum - smbMean * (endIdx-startIdx)) # [mm W.E.]
 
-smbSum         = np.flipud(smbSum)
-smbAnomalyMean = np.flipud(smbMean)
-smbAnomaly     = np.flipud(smbAnomaly)
+smbSum         = np.flipud(copy.deepcopy(smbSum))
+smbAnomalyMean = np.flipud(copy.deepcopy(smbMean))
+smbAnomaly     = np.flipud(copy.deepcopy(smbAnomaly))
 
 # write tifs
 output_filename = output_directory + '/GrIS_smb_downscaled_sum_' + startdate_string + '-' + enddate_string + '_fromMean_' + meanstartdate_string + '-' + meanenddate_string + '_dh.tif'
@@ -109,7 +120,7 @@ raster.writeArrayAsRasterBand(output_filename, geoTransform, smbSum / 917., -999
 
 output_filename = output_directory + '/GrIS_smb_downscaled_mean_' + startdate_string + '-' + enddate_string + '_fromMean_' + meanstartdate_string + '-' + meanenddate_string + '_dh.tif'
 print('writing: ' + output_filename)
-raster.writeArrayAsRasterBand(output_filename, geoTransform, smbMean / 917., -9999.)
+raster.writeArrayAsRasterBand(output_filename, geoTransform, smbAnomalyMean / 917., -9999.)
 
 output_filename = output_directory + '/GrIS_smb_downscaled_anomalySum_' + startdate_string + '-' + enddate_string + '_fromMean_' + meanstartdate_string + '-' + meanenddate_string + '_dh.tif'
 print('writing: ' + output_filename)
@@ -148,7 +159,7 @@ for year in np.arange(startyear,endyear):
 smbCumulativeError = np.sqrt(smbCumulativeError)
 
 smbAnomalySumError = np.sqrt(smbCumulativeError**2 + (endyear-startyear+1)**2 * smbMeanError**2)
-smbAnomalySumError = np.flipud(smbAnomalySumError)
+smbAnomalySumError = np.flipud(copy.deepcopy(smbAnomalySumError))
 
 # write tifs
 output_filename = output_directory + '/GrIS_smb_downscaled_anomalySumError_' + startdate_string + '-' + enddate_string + '_fromMean_' + meanstartdate_string + '-' + meanenddate_string + '_dh.tif'
