@@ -54,7 +54,7 @@ def basinUnionPolygon(shapefile, attributeFilter):
    for feature in layer:
       #feature = layer.GetFeature(i)
       wkt = feature.geometry().ExportToWkt()
-      polys.append(shapely.geometry.base.geom_from_wkt(wkt))
+      polys.append(shapely.from_wkt(wkt))
 
    polyUnion = cascaded_union(polys)
 

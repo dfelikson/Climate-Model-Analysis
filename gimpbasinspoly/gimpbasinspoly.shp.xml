@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xml:lang="en"><Esri><CreaDate>20150504</CreaDate><CreaTime>17364200</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce><DataProperties><lineage><Process ToolSource="c:\program files (x86)\arcgis\desktop10.1\ArcToolbox\Toolboxes\Conversion Tools.tbx\RasterToPolygon" Date="20150504" Time="173642">RasterToPolygon gimpbasins \\UTIG3\polar\Arctic\data\GIMP_DEM\drainagebasins\gimpbasinspoly.shp SIMPLIFY Value</Process></lineage></DataProperties></Esri></metadata>
